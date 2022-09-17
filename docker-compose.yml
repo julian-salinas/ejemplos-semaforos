@@ -1,0 +1,14 @@
+services:
+  ejemplos_so:
+    tty: true
+    
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: sisop
+
+    volumes:
+      - type: bind
+        source: .
+        target: /home/sisop
