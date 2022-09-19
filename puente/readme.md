@@ -6,7 +6,7 @@ bajan.
 - No se tratan los problemas de inanición.
 
 #
-_Ejecutar_
+_Compilar_
 ```
 gcc puente.c -lpthread
 ```
