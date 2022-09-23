@@ -69,6 +69,7 @@ void autos(void* args) {
 
 void subida(void* args) {
     int id = *((int*) args);
+    free(args);
 
     pthread_mutex_lock(&mutex_bajada);
     contador_bajada++;
@@ -94,6 +95,7 @@ void subida(void* args) {
 
 void bajada(void* args) {
     int id = *((int*) args);
+    free(args);
 
     pthread_mutex_lock(&mutex_subida);
     contador_subida++;

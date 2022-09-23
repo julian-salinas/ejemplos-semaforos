@@ -20,10 +20,12 @@ sem_t sem_filosofos[CANTIDAD_FILOSOFOS];
 pthread_mutex_t mutex_tenedores;
 
 void filosofo(void* args);
-void tomar_tenedores(int numero_filosofo);
-void dejar_tenedores(int numero_filosofo);
-void comprobar(int numero_filosofo);
-bool podria_comer(int numero_filosofo);
+void tomar_tenedores(int id_filosofo);
+void dejar_tenedores(int id_filosofo);
+void comprobar(int id_filosofo);
+bool podria_comer(int id_filosofo);
+int id_sentado_a_la_derecha(int id_filosofo);
+int id_sentado_a_la_izquierda(int id_filosofo);
 
 int main(int argc, char** argv) {
     // Inicializar los semáforos de todos los filósofos en 0
@@ -38,9 +40,9 @@ int main(int argc, char** argv) {
     // Crear hilos de los filósofos para que se sienten en la mesa
     pthread_t filosofos[CANTIDAD_FILOSOFOS];
     for (int i = 0; i < CANTIDAD_FILOSOFOS; i++) {
-        int* numero_filosofo = malloc(sizeof(int));
-        *numero_filosofo = i;
-        pthread_create(&filosofos[i], NULL, (void*) filosofo, numero_filosofo);
+        int* id_filosofo = malloc(sizeof(int));
+        *id_filosofo = i;
+        pthread_create(&filosofos[i], NULL, (void*) filosofo, id_filosofo);
     }
 
     // Detener la ejecución del hilo main hasta que todos los filósofos terminen (spoiler: nunca)
@@ -52,81 +54,82 @@ int main(int argc, char** argv) {
 }
 
 void filosofo(void* args) {
-    int numero_filosofo = *((int*) args);
-    printf("Filosofo %d se sienta a la mesa \n", numero_filosofo);
+    int id_filosofo = *((int*) args);
+    free(args);
+    printf("Filosofo %d se sienta a la mesa \n", id_filosofo);
 
     while (1) {
         // Pensar
-        printf("Filosofo %d esta pensando... \n", numero_filosofo);
+        printf("Filosofo %d esta pensando... \n", id_filosofo);
         sleep(2); 
-        printf("Filosofo %d tiene hambre \n", numero_filosofo);
+        printf("Filosofo %d tiene hambre \n", id_filosofo);
 
-        tomar_tenedores(numero_filosofo);
+        tomar_tenedores(id_filosofo);
 
         // Comer
-        printf("Filosofo %d esta comiendo... \n", numero_filosofo);
+        printf("Filosofo %d esta comiendo... \n", id_filosofo);
         sleep(2);
-        printf("Filosofo %d termina de comer \n", numero_filosofo);
+        printf("Filosofo %d termina de comer \n", id_filosofo);
 
-        dejar_tenedores(numero_filosofo);
+        dejar_tenedores(id_filosofo);
     }
 }
 
-void tomar_tenedores(int numero_filosofo) {
+void tomar_tenedores(int id_filosofo) {
     pthread_mutex_lock(&mutex_tenedores);
 
-    filosofos[numero_filosofo] = HAMBRIENTO;
-    comprobar(numero_filosofo);
+    filosofos[id_filosofo] = HAMBRIENTO;
+    comprobar(id_filosofo);
     
     pthread_mutex_unlock(&mutex_tenedores);
 
     // Esperar a que le indiquen que puede tomar los tenedores
-    sem_wait(&sem_filosofos[numero_filosofo]);
+    sem_wait(&sem_filosofos[id_filosofo]);
 }
 
-void dejar_tenedores(int numero_filosofo) {
+void dejar_tenedores(int id_filosofo) {
     pthread_mutex_lock(&mutex_tenedores);
 
-    filosofos[numero_filosofo] = PENSANDO;
+    filosofos[id_filosofo] = PENSANDO;
 
     // Comprobar si los filósofos de los lados pueden comer
-    comprobar((numero_filosofo - 1) % CANTIDAD_FILOSOFOS);
-    comprobar((numero_filosofo + 1) % CANTIDAD_FILOSOFOS);
+    comprobar((id_filosofo - 1) % CANTIDAD_FILOSOFOS);
+    comprobar((id_filosofo + 1) % CANTIDAD_FILOSOFOS);
 
     pthread_mutex_unlock(&mutex_tenedores);
 }
 
-void comprobar(int numero_filosofo) {
+void comprobar(int id_filosofo) {
     /**
      * Comprobar si un filósofo puede comer (tiene tenedores disponibles), en caso de que pueda, se le indica que puede tomar los tenedores
      */ 
-    if (podria_comer(numero_filosofo)) {
-        filosofos[numero_filosofo] = COMIENDO;
-        sem_post(&sem_filosofos[numero_filosofo]);
+    if (podria_comer(id_filosofo)) {
+        filosofos[id_filosofo] = COMIENDO;
+        sem_post(&sem_filosofos[id_filosofo]);
     }
 }
 
-bool podria_comer(int numero_filosofo) {
+bool podria_comer(int id_filosofo) {
     /**
      * Indica si el filósofo indicado podría proceder a comer, esto pasa si:
      * - El filósofo indicado está hambriendo 
      * - Los filósofos de su izquierda y derecha no están comiendo (no están comiendo -> no están usando tenedores)
      */
-    return filosofos[numero_filosofo] == HAMBRIENTO 
-           && filosofos[sentado_a_la_izquierda(numero_filosofo)] != COMIENDO 
-           && filosofos[sentado_a_la_derecha(numero_filosofo)] != COMIENDO;
+    return filosofos[id_filosofo] == HAMBRIENTO 
+           && filosofos[id_sentado_a_la_izquierda(id_filosofo)] != COMIENDO 
+           && filosofos[id_sentado_a_la_derecha(id_filosofo)] != COMIENDO;
 }
 
-int sentado_a_la_izquierda(int numero_filosofo) {
+int id_sentado_a_la_izquierda(int id_filosofo) {
     /** 
      *Devuelve el número del filósofo sentado a la derecha del filósofo indicado
      */
-    return (numero_filosofo - 1) % CANTIDAD_FILOSOFOS;
+    return (id_filosofo - 1) % CANTIDAD_FILOSOFOS;
 }
 
-int sentado_a_la_derecha(int numero_filosofo) {
+int id_sentado_a_la_derecha(int id_filosofo) {
     /** 
      *Devuelve el número del filósofo sentado a la derecha del filósofo indicado
      */
-    return (numero_filosofo + 1) % CANTIDAD_FILOSOFOS;
+    return (id_filosofo + 1) % CANTIDAD_FILOSOFOS;
 }
