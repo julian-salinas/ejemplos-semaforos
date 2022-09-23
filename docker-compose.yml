@@ -1,12 +1,12 @@
 services:
-  ejemplos_so:
+  sisop:
     tty: true
     
     build:
       context: .
       dockerfile: Dockerfile
     
-    container_name: sisop
+    container_name: sincro
 
     volumes:
       - type: bind
