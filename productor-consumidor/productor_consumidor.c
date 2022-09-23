@@ -6,7 +6,7 @@
 
 #define TAM_BUFFER 3
 
-void* buffer[3];
+void* buffer[TAM_BUFFER] = {NULL};
 
 void productor(void* args);
 void consumidor(void* args);
