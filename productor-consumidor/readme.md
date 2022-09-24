@@ -2,9 +2,13 @@
 
 Un proceso/hilo produce datos que son posteriormente procesados por otro proceso/hilo
 
-- El productor no puede escribir en el buffer si está lleno
-- El consumidor no puede leer del buffer si está vacío
-- El productor y el consumidor comparten un contador de recursos disponibles
+- El productor y el consumidor comparten un buffer, donde el productor escribe y el consumidor lee.
+- El productor no puede escribir un elemento en el buffer si el mismo está lleno.
+- El consumidor no puede leer un elemento del buffer si el mismo está vacío.
+
+#
+
+![img](productor-consumidor.png)
 
 # 
 _Compilar_

@@ -1,24 +1,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern void* buffer[];
-extern int tamanio_buffer;
+#define TAMANIO_BUFFER 3
+
+void* buffer[TAMANIO_BUFFER] = {NULL};
+int tamanio_buffer = TAMANIO_BUFFER;
 
 void agregar_a_buffer(void* elemento) {
-    for (int i = 0; i < tamanio_buffer; i++) { // Buscar el primer espacio vacio del buffer (NULL)
+    for (int i = 0; i < TAMANIO_BUFFER; i++) { // Buscar el primer espacio vacio del buffer (NULL)
         if (buffer[i] == NULL) {
             buffer[i] = elemento; // Agrega el elemento al buffer
             return; // Salir de la función
         }
     }
     // Si llega hasta acá es porque no hay espacio en el buffer
-    fprintf(stderr, "No se pudo agregar el elemento al buffer \n");
+    printf("No se pudo agregar el elemento al buffer \n");
 }
 
 void* tomar_de_buffer(void) {
-    char* elemento;
+    void* elemento;
 
-    for (int i = 0; i < tamanio_buffer; i++) { // Buscar el primer elemento del buffer que no sea NULL
+    for (int i = 0; i < TAMANIO_BUFFER; i++) { // Buscar el primer elemento del buffer que no sea NULL
         if (buffer[i] != NULL) {
             elemento = buffer[i]; // Tomar el elemento del buffer
             buffer[i] = NULL; // Liberar la posición del buffer para almacenar otro elemento en el futuro
@@ -26,5 +28,5 @@ void* tomar_de_buffer(void) {
         }
     }
     // Si llega hasta acá es porque no hay elementos en el buffer
-    fprintf(stderr, "No se pudo tomar el elemento del buffer \n");
+    printf("No se pudo tomar el elemento del buffer \n");
 }

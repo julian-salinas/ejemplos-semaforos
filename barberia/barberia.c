@@ -1,12 +1,3 @@
-/**
- * Un barbero atiende clientes a medida que van llegando, pero mientras no hay nadie, se duerme.
- * Cuando un cliente llega, le avisa al barbero que llegó. En ese momento, el barbero se
- * despierta y le corta el pelo, cuando no hay más clientes, el barbero vuelve a dormir.
- *
- * - Cuando el barbero atiende a un nuevo cliente, el asiento que ocupaba ese cliente se libera.
- * - Cuando llega un cliente, en caso de haber asientos, se queda esperando, en caso contrario, se va.
-*/
-
 #include <stdio.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -22,13 +13,11 @@ void barbero(void* args);
 void cliente(void* args);
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        printf("Decime la cantidad de asientos que tiene la barberia loco >:(");
-        return 1;
-    }
+    asientos_libres = 2;
 
-    // Definir cantidad de asientos que tiene la barbería
-    asientos_libres = atoi(argv[1]);
+    if (argc == 2) {
+        asientos_libres = atoi(argv[1]);
+    }
 
     // Inicializar semáforo clientes_esperando en 0
     sem_init(&clientes_esperando, 0, 0); 
@@ -62,15 +51,15 @@ void barbero(void* args) {
 
         // Cortar pelo
         printf("El barbero esta cortando el pelo... \n");
-            sleep(6);
+            sleep(4);
         printf("El barbero termina de cortar el pelo \n");
     }
 }
 
 void cliente(void* args) {
     while (1) {
-        // Cada 3 segundos llega un nuevo cliente a la barbería
-        sleep(3);
+        // Cada 2 segundos llega un nuevo cliente a la barbería
+        sleep(2);
         printf("Llega un nuevo cliente \n");
 
         // Asegurar mutua exclusión sobre la variable asientos_libres para leerla y/o escribirla

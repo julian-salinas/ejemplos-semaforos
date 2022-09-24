@@ -6,8 +6,6 @@
 #include <stdbool.h>
 
 #define CANTIDAD_FILOSOFOS  5
-#define IZQUIERDA           (numero_filosofo - 1) % CANTIDAD_FILOSOFOS
-#define DERECHA             (numero_filosofo + 1) % CANTIDAD_FILOSOFOS
 
 typedef enum {
     PENSANDO,
@@ -56,20 +54,20 @@ int main(int argc, char** argv) {
 void filosofo(void* args) {
     int id_filosofo = *((int*) args);
     free(args);
-    printf("Filosofo %d se sienta a la mesa \n", id_filosofo);
+    printf("Filosofo %d se sienta a la mesa \n", id_filosofo + 1);
 
     while (1) {
         // Pensar
-        printf("Filosofo %d esta pensando... \n", id_filosofo);
-        sleep(2); 
-        printf("Filosofo %d tiene hambre \n", id_filosofo);
+        printf("Filosofo %d esta pensando... \n", id_filosofo + 1);
+        sleep(2);
+        printf("Filosofo %d tiene hambre \n", id_filosofo + 1);
 
         tomar_tenedores(id_filosofo);
 
         // Comer
-        printf("Filosofo %d esta comiendo... \n", id_filosofo);
+        printf("Filosofo %d esta comiendo... \n", id_filosofo + 1);
         sleep(2);
-        printf("Filosofo %d termina de comer \n", id_filosofo);
+        printf("Filosofo %d termina de comer \n", id_filosofo + 1);
 
         dejar_tenedores(id_filosofo);
     }
@@ -87,21 +85,10 @@ void tomar_tenedores(int id_filosofo) {
     sem_wait(&sem_filosofos[id_filosofo]);
 }
 
-void dejar_tenedores(int id_filosofo) {
-    pthread_mutex_lock(&mutex_tenedores);
-
-    filosofos[id_filosofo] = PENSANDO;
-
-    // Comprobar si los filósofos de los lados pueden comer
-    comprobar((id_filosofo - 1) % CANTIDAD_FILOSOFOS);
-    comprobar((id_filosofo + 1) % CANTIDAD_FILOSOFOS);
-
-    pthread_mutex_unlock(&mutex_tenedores);
-}
-
 void comprobar(int id_filosofo) {
     /**
-     * Comprobar si un filósofo puede comer (tiene tenedores disponibles), en caso de que pueda, se le indica que puede tomar los tenedores
+     * Comprobar si un filósofo puede comer (tiene tenedores disponibles), en caso de que pueda, 
+     * se le indica que puede tomar los tenedores
      */ 
     if (podria_comer(id_filosofo)) {
         filosofos[id_filosofo] = COMIENDO;
@@ -124,12 +111,30 @@ int id_sentado_a_la_izquierda(int id_filosofo) {
     /** 
      *Devuelve el número del filósofo sentado a la derecha del filósofo indicado
      */
-    return (id_filosofo - 1) % CANTIDAD_FILOSOFOS;
+    if (id_filosofo == 0) {
+        return CANTIDAD_FILOSOFOS - 1;
+    } 
+    return id_filosofo - 1;
 }
 
 int id_sentado_a_la_derecha(int id_filosofo) {
     /** 
      *Devuelve el número del filósofo sentado a la derecha del filósofo indicado
      */
-    return (id_filosofo + 1) % CANTIDAD_FILOSOFOS;
+    if (id_filosofo == CANTIDAD_FILOSOFOS - 1) {
+        return 0;
+    } 
+    return id_filosofo + 1;
+}
+
+void dejar_tenedores(int id_filosofo) {
+    pthread_mutex_lock(&mutex_tenedores);
+
+    filosofos[id_filosofo] = PENSANDO;
+
+    // Comprobar si los filósofos de los lados pueden comer
+    comprobar((id_filosofo - 1) % CANTIDAD_FILOSOFOS);
+    comprobar((id_filosofo + 1) % CANTIDAD_FILOSOFOS);
+
+    pthread_mutex_unlock(&mutex_tenedores);
 }
