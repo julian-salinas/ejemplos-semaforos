@@ -4,60 +4,46 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define TAM_BUFFER 3
+#define TAMANIO_BUFFER 3
 
-void* buffer[TAM_BUFFER] = {NULL};
-
-void productor(void* args);
-void consumidor(void* args);
-char* producir_elemento(void);
+void* buffer[TAMANIO_BUFFER] = {NULL};
+int tamanio_buffer = TAMANIO_BUFFER;
 
 pthread_mutex_t mutex_buffer;
 sem_t contador_vacios;
 sem_t contador_llenos;
 
-void agregar_a_buffer(void* elemento) {
-    for (int i = 0; i < TAM_BUFFER; i++) {
-        if (buffer[i] == NULL) {
-            buffer[i] = elemento;
-            break;
-        }
-    }
-}
+extern void agregar_a_buffer(void* elemento);
+extern void* tomar_de_buffer(void);
 
-void* tomar_de_buffer(void) {
-    char* elemento;
-
-    for (int i = 0; i < TAM_BUFFER; i++) {
-        if (buffer[i] != NULL) {
-            elemento = buffer[i];
-            buffer[i] = NULL; // Libera el espacio del buffer
-            return elemento;
-        }
-    }
-}
+void productor(void* args);
+void consumidor(void* args);
+char* producir_elemento(void);
 
 void productor(void* args) {
     int id_productor = *((int*) args) + 1;
     free(args);
 
     while(1) {
-        sem_wait(&contador_vacios); // Espera a que haya un espacio vacio
+        sleep(3); // 😴 (Simula el tiempo que tarda en producir)
+        
+        sem_wait(&contador_vacios); // Avanzar cuando haya espacio en el buffer
+        
+        /* Escribir el buffer, asegurando mutua exclusión */
         pthread_mutex_lock(&mutex_buffer);
         char* elemento = producir_elemento();
-        printf("Productor %d agrega elemento %c al buffer \n", id_productor, *elemento);
+        printf("Productor ID:%d agrega elemento <<%c>> al buffer \n", id_productor, *elemento);
         agregar_a_buffer(elemento);
         pthread_mutex_unlock(&mutex_buffer);
         
-        sem_post(&contador_llenos); // Avisa que hay un recurso producido (buffer lleno)
-        
-        sleep(3); // 😴 (Simula el tiempo que tarda en producir)
+        sem_post(&contador_llenos); // Avisa que hay un recurso más en el buffer
     }
 }
 
 char* producir_elemento(void) {
     char* elemento = malloc(sizeof(char));
     
+    // Genera un caracter aleatorio
     *elemento = "abcdefghijklmnopqrstuvwxyz"[rand() % 26];
     
     return elemento;
@@ -70,15 +56,16 @@ void consumidor(void* args) {
     while(1) {
         sem_wait(&contador_llenos); // Espera a que haya un recurso producido (buffer lleno)
 
+        /* Consumir un elemento del buffer, asegurando mutua exclusión */
         pthread_mutex_lock(&mutex_buffer);
-        char* elemento = (char*) tomar_de_buffer();
-        printf("Consumidor %d consume %c\n", id_consumidor, *elemento);
+        char* elemento = (char*) tomar_de_buffer(); // Tomar un elemento del buffer
+        printf("Consumidor ID:%d consume <<%c>> \n", id_consumidor, *elemento);
         pthread_mutex_unlock(&mutex_buffer);
 
         sem_post(&contador_vacios); // Avisa que hay un espacio vacio (buffer vacio)
         
         sleep(2); // 😴 (Simula el tiempo que tarda en consumir)
-        free(elemento); // Libera el recurso consumido
+        free(elemento);
     }
 }
 
@@ -93,7 +80,7 @@ int main(int argc, char** argv) {
 
     // Inicializar semáforos
     pthread_mutex_init(&mutex_buffer, NULL);
-    sem_init(&contador_vacios, 0, TAM_BUFFER);
+    sem_init(&contador_vacios, 0, TAMANIO_BUFFER);
     sem_init(&contador_llenos, 0, 0);
 
     // Crear hilos de los productores
