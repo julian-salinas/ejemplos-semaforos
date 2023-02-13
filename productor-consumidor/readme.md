@@ -6,10 +6,6 @@ Un proceso/hilo produce datos que son posteriormente procesados por otro proceso
 - El productor no puede escribir un elemento en el buffer si el mismo está lleno.
 - El consumidor no puede leer un elemento del buffer si el mismo está vacío.
 
-#
-
-![img](productor-consumidor.png)
-
 # 
 _Compilar_
 ```
